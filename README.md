@@ -87,19 +87,19 @@ body:
 
 {
 
-name: STRING,
+	name: STRING,
 
-location: STRING,
+	location: STRING,
 
-year_established: INT,
+	year_established: INT,
 
-Id: STRING,
+	Id: STRING,
 
-self: STRING,
+	self: STRING,
 
-players: ARRAY,
+	players: ARRAY,
 
-owner: STRING
+	owner: STRING
 
 }
 
@@ -247,19 +247,19 @@ body:
 
 {
 
-name: STRING,
+	name: STRING,
 
-location: STRING,
+	location: STRING,
 
-year_established: INT,
+	year_established: INT,
 
-Id: STRING,
+	Id: STRING,
 
-self: STRING,
+	self: STRING,
 
-players: ARRAY,
+	players: ARRAY,
 
-owner: STRING
+	owner: STRING
 
 }
 
@@ -416,17 +416,17 @@ body:
 
 {
 
-name: STRING,
+	name: STRING,
 
-team: TEAM object,
+	team: TEAM object,
 
-height: INT,
+	height: INT,
 
-age: INT,
+	age: INT,
 
-id: STRING,
+	id: STRING,
 
-self: STRING
+	self: STRING
 
 }
 
