@@ -3,11 +3,19 @@ const jwks = require('jwks-rsa');
 const request = require('request');
 const utf8 = require('utf8');
 
+// Names of entities in the Google Cloud Data Store 
 const PLAYER = "Player";
 const TEAM = "Team";
 const USER = "User";
-//const URL = "http://127.0.0.1:8080/api"
-const URL = "https://final-dot-osu493-217710.appspot.com/api";
+
+// Base URL of API
+const URL = process.env.URL;
+
+// Set Auth0 info in environment 
+const AUTH0_URL = process.env.AUTH0_URL;
+const AUDIENCE = process.env.AUDIENCE;
+const JWKS_URI = process.env.JWKS_URL;
+const ISSUER = process.env.ISSUER;
 
 // getModel() was taken from Google's example Books API on GitHub
 // https://github.com/GoogleCloudPlatform/nodejs-getting-started/tree/8bb3d70596cb0c1851cd587d393faa76bfad8f80/2-structured-data/books
@@ -22,7 +30,7 @@ function getPathHelper(URL, kind) {
 
 function getUserInfo(access_token, cb) {
   var options = { method: 'POST',
-  url: 'https://jc-osu493.auth0.com/userinfo',
+  url: AUTH0_URL,
   headers: { 'content-type': 'application/json',
             'Authorization': 'Bearer ' + access_token
   },
@@ -60,10 +68,10 @@ var jwtCheck = jwt({
         cache: true,
         rateLimit: true,
         jwksRequestsPerMinute: 5,
-        jwksUri: "https://jc-osu493.auth0.com/.well-known/jwks.json"
+        jwksUri: JWKS_URI
     }),
-      audience: 'https://auth0-dot-osu493-217710.appspot.com/',
-      issuer: "https://jc-osu493.auth0.com/",
+      audience: AUDIENCE,
+      issuer: ISSUER,
       algorithms: ['RS256']
     }
   );
@@ -83,10 +91,6 @@ function mapSelfLinks(kind, entities) {
   for (var i = 0; i < entities.length; i++) {
     entities[i].self = getModel().getPath(URL, kind) + '/' + entities[i].id;
   }
-}
-
-function validAccept() {
-
 }
 
 function getCursor(query) {
@@ -125,33 +129,6 @@ function correctPUTParameters(body, parameters) {
     return correctPUTParameters(body, parameters);
   }
 
-  function removeShipFromSlip(slip, ship, cb) {
-    getModel().read(SLIP, slip, (err, slipEntity) => {
-      if (err) {
-        cb(err, null);
-      }    
-      else if (slipEntity) {
-        if (slipEntity.current_boat == ship) {
-          slipEntity.current_boat = null;
-          slipEntity.arrival_date = null;
-          slipEntity.ship_URL = null;
-          getModel().update(SLIP, slip, slipEntity, (err, entity) => {
-              if (err) {
-                cb(err, null);
-              }
-              cb(null, entity);
-            });
-        }
-        else {
-          cb({"code": 403}, {"message": "Invalid request"});
-        }
-      }  
-      else {
-        cb({"code": 403}, null);
-      }
-    });
-  }
-
   function getEntityCount(kind, cb) {
     getModel().keys_only(kind, (err, count) => { 
       if (err) {
@@ -177,7 +154,6 @@ function correctPUTParameters(body, parameters) {
             nextLink = getModel().getPath(URL, kind) + "?cursor=" + nextCursor;
           }
           getEntityCount(kind, function (err, count) {
-            console.log(count);
             if (err) {
               cb (err, null);
             }
@@ -218,7 +194,6 @@ function editDocument(kind, id, data, cb) {
 function deleteDocument(kind, id, cb) {
   getModel().delete(kind, id, (err) => {
     if (err) {
-      console.log(err);
       cb(err)
     }
     cb(null)
@@ -264,74 +239,7 @@ function isAtSea(kind, prop, id, cb) {
     cb(null, response.items.length == 0)
   }  
 }
-
-function getArrivalDate() {
-  var d = new Date()
-  return (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear()
-}
   
-function removeCargoFromShip(ship, cargo, cb) {
-  var tempCargo; 
-
-  getDocument(CARGO, cargo, returnCargo);
-
-  function returnCargo (err, cargoEntity) {
-    if (err) {
-      cb(err, null);
-    }
-    else {
-      if (cargoEntity.carrier) {
-        if (cargoEntity.carrier.id == ship) {
-          cargoEntity.carrier = null;
-          tempCargo = cargoEntity;
-          editDocument(CARGO, cargo, cargoEntity, cargoCallback)
-        }
-        else {
-          cb({"code": 403}, null);
-        }
-      }
-      else {
-        cb(null, cargoEntity);
-      }
-    }
-  }
-
-  function cargoCallback(err, response) {
-    if (err) {
-      cb(err, null)
-    }
-    else {
-      getDocument(SHIP, ship, returnShip);
-    }
-  }
-
-  function returnShip (err, shipEntity) {
-    if (err) {
-      cb(err, null)
-    }
-    else {
-      for (var i = 0; i < shipEntity.cargo.length; i++) {
-        if (shipEntity.cargo[i].id == cargo) {
-          shipEntity.cargo.splice(i, 1);
-          break;
-        }
-      }
-      editDocument(SHIP, ship, shipEntity, complete);
-    }
-  }
-
-  function complete(err, response) {
-    if (err) {
-      cb(err, null);
-    }
-    else {
-      cb(null, tempCargo);
-    }
-  } 
-
-}
-
-
 function removePlayerFromTeam(team, player, cb) {
   var playerEntity; 
 
@@ -399,23 +307,18 @@ function removePlayerFromTeam(team, player, cb) {
 }
 
 
-
 module.exports = {
-      correctPUTParameters: correctPUTParameters,
-      correctPOSTParameters: correctPOSTParameters,
-      removeShipFromSlip: removeShipFromSlip,
-      getDocuments: getDocuments,
-      getDocument: getDocument,
-      createDocument: createDocument,
-      editDocument: editDocument,
-      deleteDocument: deleteDocument,
-      selectWhere: selectWhere,
-      isAtSea: isAtSea,
-      getArrivalDate,
+      correctPUTParameters,
+      correctPOSTParameters,
+      getDocuments,
+      getDocument,
+      createDocument,
+      editDocument,
+      deleteDocument,
+      selectWhere,
       getCursor,
       getPathHelper,
       URL,
-      removeCargoFromShip,
       convertToHTML,
       jwtCheck,
       correctHeaders,
