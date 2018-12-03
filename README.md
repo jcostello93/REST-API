@@ -1,5 +1,7 @@
 # REST API
 
+![Alt text](./tests/tests.png?raw=true "Node-RED tests")
+
 ## Summary
 This was my final project for my CS493 Cloud Aplication Development course. 
 
