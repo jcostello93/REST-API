@@ -1,7 +1,5 @@
 # REST API
 
-![Alt text](./tests/tests.png?raw=true "Node-RED tests")
-
 ## Summary
 This was my final project for my CS493 Cloud Aplication Development course. 
 
@@ -25,6 +23,8 @@ Google App Engine
 
 ### Tests
 I created a Node-RED Application to test the functionality of the API. The code is stored in the Node-RED directory in the repository. To run the tests, create a Node-RED application and import the JSON code. 
+
+![Alt text](./tests/tests.png?raw=true "Node-RED tests")
 
 # Routes
 
